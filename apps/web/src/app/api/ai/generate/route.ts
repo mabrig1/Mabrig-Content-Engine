@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { generateWithHuggingFace, huggingFaceConfigured } from '@/lib/huggingface';
 
 const schema = z.object({
   type: z.enum(['CAPTION', 'HOOK', 'HASHTAGS', 'CTA', 'HEADLINE', 'STORY', 'THREAD', 'VIDEO_SCRIPT']),
@@ -9,7 +10,7 @@ const schema = z.object({
   tone: z.enum(['motivational', 'prophetic', 'inspirational', 'business', 'storytelling', 'educational', 'humorous', 'professional']).default('inspirational'),
   platform: z.string().optional(),
   extraContext: z.string().max(500).optional(),
-  model: z.enum(['openai', 'claude']).default('openai'),
+  model: z.enum(['openai', 'claude', 'huggingface']).default('openai'),
 });
 
 const TONE_DESCRIPTIONS: Record<string, string> = {
@@ -201,6 +202,64 @@ async function generateWithClaude(prompt: string): Promise<string> {
   return data.content[0].text;
 }
 
+type AIProvider = 'openai' | 'claude' | 'huggingface';
+
+function providerConfigured(provider: AIProvider) {
+  if (provider === 'openai') return Boolean(process.env.OPENAI_API_KEY);
+  if (provider === 'claude') return Boolean(process.env.ANTHROPIC_API_KEY);
+  return huggingFaceConfigured();
+}
+
+async function generateWithProvider(
+  provider: AIProvider,
+  prompt: string,
+): Promise<{ content: string; model: string }> {
+  if (provider === 'openai') {
+    return { content: await generateWithOpenAI(prompt), model: 'gpt-4o-mini' };
+  }
+  if (provider === 'claude') {
+    return { content: await generateWithClaude(prompt), model: 'claude-haiku-4-5' };
+  }
+
+  const result = await generateWithHuggingFace(prompt);
+  return {
+    content: result.content,
+    model: `${result.model} via Hugging Face`,
+  };
+}
+
+async function generateWithFallback(
+  requested: AIProvider,
+  prompt: string,
+): Promise<{ content: string; model: string }> {
+  const order = [
+    requested,
+    'huggingface',
+    'openai',
+    'claude',
+  ] as AIProvider[];
+  const providers = [...new Set(order)].filter(providerConfigured);
+
+  if (!providers.length) {
+    throw new Error(
+      'No AI provider is configured. Set HF_TOKEN, OPENAI_API_KEY, or ANTHROPIC_API_KEY.',
+    );
+  }
+
+  let firstError: unknown;
+  for (const provider of providers) {
+    try {
+      return await generateWithProvider(provider, prompt);
+    } catch (error) {
+      firstError ??= error;
+    }
+  }
+
+  throw firstError instanceof Error
+    ? firstError
+    : new Error('All configured AI providers failed');
+}
+
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session?.workspace) {
@@ -222,31 +281,9 @@ export async function POST(req: NextRequest) {
 
     const prompt = promptFn(topic, tone, platform, extraContext);
 
-    let result: string;
-    let usedModel: string;
-
-    try {
-      if (model === 'claude') {
-        result = await generateWithClaude(prompt);
-        usedModel = 'claude-haiku-4-5';
-      } else {
-        result = await generateWithOpenAI(prompt);
-        usedModel = 'gpt-4o-mini';
-      }
-    } catch (primaryError) {
-      // Fallback to the other provider
-      try {
-        if (model === 'claude') {
-          result = await generateWithOpenAI(prompt);
-          usedModel = 'gpt-4o-mini (fallback)';
-        } else {
-          result = await generateWithClaude(prompt);
-          usedModel = 'claude-haiku (fallback)';
-        }
-      } catch {
-        throw primaryError;
-      }
-    }
+    const generated = await generateWithFallback(model, prompt);
+    const result = generated.content;
+    const usedModel = generated.model;
 
     // Save to history (non-blocking)
     await prisma.aIContentHistory.create({

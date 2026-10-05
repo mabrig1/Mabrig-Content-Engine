@@ -26,7 +26,10 @@ export async function GET() {
     }),
   ]);
 
-  const statusMap = postStats.reduce((acc: Record<string, number>, g) => {
+  type PostStat = { status: string; _count: number };
+  const typedPostStats = postStats as PostStat[];
+
+  const statusMap = typedPostStats.reduce((acc: Record<string, number>, g) => {
     acc[g.status] = g._count;
     return acc;
   }, {});
