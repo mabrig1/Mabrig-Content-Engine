@@ -27,7 +27,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Generate Prisma client
-        run: npx prisma generate --schema=packages/database/prisma/schema.prisma
+        run: pnpm --filter @mabrig/web db:generate
         env:
           DATABASE_URL: postgresql://mabrig:password@localhost:5432/mabrig_content_engine
 
@@ -63,7 +63,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Generate Prisma client
-        run: npx prisma generate --schema=packages/database/prisma/schema.prisma
+        run: pnpm --filter @mabrig/web db:generate
 
       - name: Build
         run: pnpm --filter @mabrig/web build
