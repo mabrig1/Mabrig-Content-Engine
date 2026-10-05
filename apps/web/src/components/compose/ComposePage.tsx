@@ -45,7 +45,7 @@ export default function ComposePage() {
   const [aiTopic, setAiTopic] = useState('');
   const [aiType, setAiType] = useState('CAPTION');
   const [aiTone, setAiTone] = useState('inspirational');
-  const [aiModel, setAiModel] = useState<'openai' | 'claude'>('openai');
+  const [aiModel, setAiModel] = useState<'openai' | 'claude' | 'huggingface'>('openai');
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState('');
 
@@ -292,8 +292,8 @@ export default function ComposePage() {
 
               <div>
                 <label className="text-xs font-medium text-gray-400 mb-1.5 block">AI Model</label>
-                <div className="flex gap-2">
-                  {(['openai', 'claude'] as const).map((m) => (
+                <div className="grid grid-cols-3 gap-2">
+                  {(['openai', 'claude', 'huggingface'] as const).map((m) => (
                     <button
                       key={m}
                       onClick={() => setAiModel(m)}
@@ -304,7 +304,7 @@ export default function ComposePage() {
                           : 'bg-surface-200 border-white/5 text-gray-400 hover:border-white/10'
                       )}
                     >
-                      {m === 'openai' ? '🧠 GPT-4o' : '⚡ Claude'}
+                      {m === 'openai' ? '🧠 GPT-4o' : m === 'claude' ? '⚡ Claude' : '🤗 Hugging Face'}
                     </button>
                   ))}
                 </div>
