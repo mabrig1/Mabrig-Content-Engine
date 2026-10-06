@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { currentUser } from '../../../../lib/auth';
-import { genericCollection } from '../../../../lib/db';
-import { hashKaggleToken, newKaggleWorkerToken } from '../../../../lib/kaggle-worker';
+import { currentUser } from '../../../../../lib/auth';
+import { genericCollection } from '../../../../../lib/db';
+import { hashKaggleToken, newKaggleWorkerToken } from '../../../../../lib/kaggle-worker';
 
 export const dynamic='force-dynamic';
 
