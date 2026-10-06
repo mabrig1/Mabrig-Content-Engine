@@ -3,11 +3,18 @@ import { VIDEO_PROVIDER_REGISTRY, runtimeStatesFromEnvironment } from '../../../
 import { runVideoRoutingMission } from '../../../lib/video-router/orchestrator';
 import { videoCircuitBreakers } from '../../../lib/video-router/circuit-breaker';
 import type {
+import { currentUser, hasPaidAccess } from '../../../lib/auth';
   ProviderRuntimeState,
   VideoGenerationRequest,
 } from '../../../lib/video-router/types';
 
+async function paidGuard() {
+  const user = await currentUser();
+  return Boolean(user && hasPaidAccess(user));
+}
+
 export async function GET() {
+  if (!(await paidGuard())) return NextResponse.json({ error: 'Paid membership required.' }, { status: 401 });
   return NextResponse.json({
     providers: VIDEO_PROVIDER_REGISTRY,
     runtime: runtimeStatesFromEnvironment(),
@@ -19,6 +26,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await paidGuard())) return NextResponse.json({ error: 'Paid membership required.' }, { status: 401 });
   try {
     const body = (await req.json()) as {
       request?: VideoGenerationRequest;
