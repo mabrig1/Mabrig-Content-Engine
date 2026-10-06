@@ -1,7 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { NextRequest, NextResponse } from 'next/server';
-import { currentUser, hasPaidAccess } from '../../../../lib/auth';
-import { genericCollection } from '../../../../lib/db';
+import { currentUser, hasPaidAccess } from '../../../../../lib/auth';
+import { genericCollection } from '../../../../../lib/db';
 
 export const dynamic='force-dynamic';
 
