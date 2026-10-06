@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { currentUser, hasPaidAccess } from '../../../../lib/auth';
-import { genericCollection } from '../../../../lib/db';
-import type { ProfessionalShot } from '../../../../lib/pro-film-os';
+import { currentUser, hasPaidAccess } from '../../../../../lib/auth';
+import { genericCollection } from '../../../../../lib/db';
+import type { ProfessionalShot } from '../../../../../lib/pro-film-os';
 
 export const dynamic='force-dynamic';
 
