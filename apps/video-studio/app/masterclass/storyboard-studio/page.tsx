@@ -44,10 +44,42 @@ export default function StoryboardStudioPage(){
   const [autoRepair,setAutoRepair]=useState(true);
   const [busy,setBusy]=useState('');
   const [notice,setNotice]=useState('');
+  const [actorRefs,setActorRefs]=useState<string[]>([]);
 
   const selectedBoard=useMemo(()=>storyboard.find(x=>x.shotId===selected?.id)||null,[storyboard,selected]);
 
   function set<K extends keyof FilmProjectInput>(key:K,value:FilmProjectInput[K]){setInput(v=>({...v,[key]:value}));}
+
+  async function imageFileToJpeg(file:File){
+    return new Promise<string>((resolve,reject)=>{
+      const objectUrl=URL.createObjectURL(file);
+      const image=new Image();
+      image.onload=()=>{
+        try{
+          const scale=Math.min(1,1024/Math.max(image.naturalWidth,image.naturalHeight));
+          const canvas=document.createElement('canvas');
+          canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+          canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+          const ctx=canvas.getContext('2d');
+          if(!ctx) throw new Error('Canvas unavailable.');
+          ctx.drawImage(image,0,0,canvas.width,canvas.height);
+          URL.revokeObjectURL(objectUrl);
+          resolve(canvas.toDataURL('image/jpeg',.82));
+        }catch(error){URL.revokeObjectURL(objectUrl);reject(error)}
+      };
+      image.onerror=()=>{URL.revokeObjectURL(objectUrl);reject(new Error('Identity reference could not be read.'))};
+      image.src=objectUrl;
+    });
+  }
+
+  async function addActorRefs(files:FileList|null){
+    if(!files)return;
+    try{
+      const remaining=Math.max(0,3-actorRefs.length);
+      const next=await Promise.all(Array.from(files).slice(0,remaining).map(imageFileToJpeg));
+      setActorRefs(current=>[...current,...next].slice(0,3));
+    }catch(error){setNotice(error instanceof Error?error.message:'Reference import failed.')}
+  }
 
   async function svgToPng(svgDataUrl:string){
     return new Promise<string>((resolve,reject)=>{
@@ -165,6 +197,7 @@ export default function StoryboardStudioPage(){
         jobId:job.jobId,
         approvedStoryboardDataUrl:storyboardPng,
         previousShot:idx>0?film.shots[idx-1]:null,
+        actorReferenceDataUrls:actorRefs,
       })});
       const p=await r.json();if(!r.ok)throw new Error(p.error||'Visual QC failed');
       setQc(p.qc);setQcSource(p.source||'visual-qc');setVisionFrames(p.frames||null);
@@ -199,8 +232,8 @@ export default function StoryboardStudioPage(){
       const r=await fetch('/api/cinema-os/assemble-local',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
         title:film.title,
         jobIds:ordered.map(job=>job.jobId),
-        width:input.aspectRatio==='9:16'?1080:1920,
-        height:input.aspectRatio==='9:16'?1920:1080,
+        width:input.aspectRatio==='9:16'?1080:input.aspectRatio==='1:1'?1080:1920,
+        height:input.aspectRatio==='9:16'?1920:input.aspectRatio==='1:1'?1080:1080,
         fps:24,
       })});
       const p=await r.json();if(!r.ok)throw new Error(p.error||p.detail||'Assembly failed');
@@ -237,6 +270,10 @@ export default function StoryboardStudioPage(){
         <label>Title</label><input value={input.title} onChange={e=>set('title',e.target.value)}/>
         <label>Logline</label><textarea value={input.logline} onChange={e=>set('logline',e.target.value)}/>
         <label>Visual DNA</label><textarea value={input.visualStyle} onChange={e=>set('visualStyle',e.target.value)}/>
+        <label>Approved actor identity references · up to 3</label>
+        <input type="file" accept="image/*" multiple onChange={e=>addActorRefs(e.target.files)}/>
+        <div className="actorRefGrid">{actorRefs.map((src,index)=><div key={index}><img src={src} alt={'Actor reference '+(index+1)}/><button type="button" onClick={()=>setActorRefs(current=>current.filter((_,i)=>i!==index))}>×</button></div>)}</div>
+        <small className="hint">These references are compressed in your browser and used only to judge identity continuity during Vision QC.</small>
       </div>
       <div className="panel"><h2>STORY PRESSURE</h2>
         <label>Protagonist</label><textarea value={input.protagonist} onChange={e=>set('protagonist',e.target.value)}/>
