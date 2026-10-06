@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { currentUser, hasPaidAccess } from '../../../../lib/auth';
 import {
   buildDeterministicDebate,
+  CINEMA_KNOWLEDGE,
   type DebateProposal,
   type ProfessionalShot,
 } from '../../../../lib/pro-film-os';
@@ -40,7 +41,7 @@ async function callAgent(
           content:
             `You are the ${agent} in a professional film production debate. ${mandate} Return JSON only with recommendation, risk, score (1-10). Do not reveal private chain-of-thought.`,
         },
-        { role: 'user', content: JSON.stringify(shot) },
+        { role: 'user', content: JSON.stringify({ shot, methodology: CINEMA_KNOWLEDGE.filter((card) => shot.knowledgeRefs.includes(card.id)) }) },
       ],
     }),
     cache: 'no-store',
@@ -86,7 +87,7 @@ async function judge(
           content:
             'You are the senior film judge. Resolve the department recommendations into one production decision. Return JSON only: decision APPROVE or REVISE, winningApproach, mandatoryChanges array, score 1-10. Do not reveal private chain-of-thought.',
         },
-        { role: 'user', content: JSON.stringify({ shot, proposals }) },
+        { role: 'user', content: JSON.stringify({ shot, proposals, methodology: CINEMA_KNOWLEDGE.filter((card) => shot.knowledgeRefs.includes(card.id)) }) },
       ],
     }),
     cache: 'no-store',
