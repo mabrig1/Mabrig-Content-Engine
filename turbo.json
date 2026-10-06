@@ -1,10 +1,65 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": ["NODE_ENV", "DATABASE_URL", "REDIS_URL"],
+  "globalEnv": [
+    "NODE_ENV",
+    "DATABASE_URL",
+    "REDIS_URL",
+    "NEXT_PUBLIC_APP_URL",
+    "OPENROUTER_API_KEY",
+    "NVIDIA_API_KEY",
+    "HF_TOKEN",
+    "GOOGLE_VIDS_BRIDGE_ENABLED",
+    "GEMINI_API_KEY",
+    "GEMINI_VEO_MODEL",
+    "GEMINI_VEO_USD_PER_SECOND",
+    "GEMINI_VEO_MAX_COST_USD",
+    "RUNWAYML_API_SECRET",
+    "RUNWAY_API_KEY",
+    "RUNWAY_ROUTER_CONFIG_ID",
+    "RUNWAY_MAX_CREDITS_PER_GENERATION",
+    "EDENAI_API_KEY",
+    "COMETAPI_API_KEY",
+    "VIDEO_ROUTER_PAID_FALLBACK",
+    "VIDEO_ROUTER_MAX_COST_USD",
+    "VIDEO_EXECUTION_ENABLED",
+    "VIDEO_EXECUTION_TOKEN",
+    "MONGODB_URI",
+    "R2_ENDPOINT",
+    "R2_ACCESS_KEY_ID",
+    "R2_SECRET_ACCESS_KEY",
+    "R2_BUCKET",
+    "GPU_WORKER_URL",
+    "GPU_WORKER_TOKEN",
+    "VIDEO_GENERATION_EXECUTABLE",
+    "VIDEO_GENERATION_TIMEOUT_SECONDS",
+    "META_APP_ID",
+    "META_APP_SECRET",
+    "WEBSITE_PUBLISH_URL",
+    "WEBSITE_PUBLISH_TOKEN",
+    "VIDEO_APPROVAL_TOKEN",
+    "VIDEO_APPROVAL_SECRET",
+    "VIDEO_ARTIFACT_MAX_BYTES",
+    "VIDEO_ARTIFACT_ALLOWED_HOSTS",
+    "GPU_WORKER_PUBLIC_URL",
+    "VIDEO_OUTPUT_DIR",
+    "WAN_MODEL_ID",
+    "WAN_CPU_OFFLOAD",
+    "WAN_NUM_FRAMES",
+    "WAN_FPS",
+    "WAN_STEPS",
+    "WAN_GUIDANCE_SCALE",
+    "WAN_SEED"
+  ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "dist/**"
+      ]
     },
     "dev": {
       "cache": false,
@@ -18,7 +73,9 @@
       "cache": false
     },
     "start": {
-      "dependsOn": ["build"]
+      "dependsOn": [
+        "build"
+      ]
     }
   }
 }
