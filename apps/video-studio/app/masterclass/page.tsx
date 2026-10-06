@@ -1,5 +1,6 @@
 export default function MasterclassHome() {
   const areas = [
+    ['PRO','Professional Film OS','Shot tables, continuity graph, debate/judge departments, selective reruns, floor plans and NLE exports.','/masterclass/pro-film-lab'],
     ['II','Workstation Playground','Media, identity, production controls, scene timeline, variants, render profiles and cloud projects.','/masterclass/workstation'],
     ['III','Agentic Tutorials','Beginner → Director → Agentic Producer. Lessons open directly inside the workstation.','/masterclass/tutorials'],
     ['IV','Prompts & Templates','Director templates plus camera, lighting, lip-sync and continuity prompt packs.','/masterclass/library'],
@@ -12,7 +13,7 @@ export default function MasterclassHome() {
       <section className="memberHero">
         <p className="eyebrow">PAID MEMBER WORKSPACE</p>
         <h1>Cinematic Movie <em>Masterclass.</em></h1>
-        <p>Learn, build and run an AI production pipeline from one protected account.</p>
+        <p>Learn filmmaking, compile professional shot plans, direct an AI crew, route generation, preserve continuity and finish in real post-production workflows.</p>
       </section>
       <section className="memberGrid">
         {areas.map(([num,title,copy,href])=>(
