@@ -47,6 +47,8 @@ export function StudioWorkflowPanel({
     workflow.scenes[0].id,
   );
   const [notice, setNotice] = useState('');
+  const [cloudId, setCloudId] = useState('');
+  const [cloudBusy, setCloudBusy] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -169,6 +171,52 @@ export function StudioWorkflowPanel({
     }
   }
 
+  async function saveCloud() {
+    setCloudBusy(true);
+    setNotice('');
+    try {
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: cloudId || undefined,
+          title: workflow.title,
+          kind: 'workflow',
+          payload: workflow,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Cloud save failed.');
+      setCloudId(payload.id || cloudId);
+      setNotice('Project saved to your account.');
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : 'Cloud save failed.');
+    } finally {
+      setCloudBusy(false);
+    }
+  }
+
+  async function loadLatestCloud() {
+    setCloudBusy(true);
+    setNotice('');
+    try {
+      const response = await fetch('/api/projects', { cache: 'no-store' });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || 'Cloud projects could not load.');
+      const latest = (payload.projects || []).find((item: any) => item.kind === 'workflow');
+      if (!latest) throw new Error('No cloud-saved workflow exists yet.');
+      const restored = validateWorkflow(latest.payload);
+      setWorkflow(restored);
+      setSelectedSceneId(restored.scenes[0].id);
+      setCloudId(latest.id || '');
+      setNotice('Loaded your latest cloud workflow.');
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : 'Cloud load failed.');
+    } finally {
+      setCloudBusy(false);
+    }
+  }
+
   const preset =
     RENDER_PRESETS.find((item) => item.id === workflow.renderPresetId) ||
     RENDER_PRESETS[0];
@@ -251,6 +299,20 @@ export function StudioWorkflowPanel({
             </button>
             <button type="button" onClick={() => importRef.current?.click()}>
               Import JSON
+            </button>
+            <button type="button" onClick={saveCloud} disabled={cloudBusy}>
+              {cloudBusy ? 'Saving…' : 'Save Cloud'}
+            </button>
+            <button type="button" onClick={loadLatestCloud} disabled={cloudBusy}>
+              Load Latest Cloud
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = '/masterclass/workstation/projects';
+              }}
+            >
+              My Projects
             </button>
             <input
               ref={importRef}
@@ -428,9 +490,9 @@ export function StudioWorkflowPanel({
           <h2>Workflow Portability</h2>
           <p>
             Workflow JSON contains scene order, prompts, source modes, variants,
-            provider preferences and render settings. It can be versioned in
-            Git, shared between machines or restored later. The latest project
-            also autosaves locally in this browser.
+            provider preferences and render settings. Local autosave remains available,
+            while Cloud Save stores the workflow against your paid account so it can
+            be restored on another device.
           </p>
           <label>Production notes</label>
           <textarea
