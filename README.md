@@ -17,6 +17,7 @@ A production-ready platform for creators and agencies to schedule content, manag
 | **Media Library** | Upload & organize images, videos, GIFs with AI metadata |
 | **Analytics Dashboard** | Post performance, engagement, audience growth |
 | **Automation Workflows** | Event-driven automation pipelines |
+| **AI Video Studio** | Agentic movie/music-video workstation, provider routing, scene workflows, lip-sync pipeline and GPU-worker handoff |
 | **Multi-tenant** | Workspace architecture for agencies |
 
 ---
@@ -126,7 +127,8 @@ See `.env.example` for the full list.
 ```
 mabrig-content-engine/
 ├── apps/
-│   └── web/                        # Next.js 14 application
+│   ├── web/                        # Main Next.js 14 Content Engine application
+│   └── video-studio/               # AI video workstation consolidated from mabrig1/aivideo
 │       └── src/
 │           ├── app/
 │           │   ├── (auth)/         # Login / Register pages
@@ -243,3 +245,10 @@ docker-compose -f docker-compose.yml up -d --build
 ## License
 
 MIT License — Built by MABRIG
+
+
+---
+
+## Repository consolidation
+
+The standalone `mabrig1/aivideo` codebase has been migrated into `apps/video-studio`. **Mabrig-Content-Engine is the canonical product repository going forward.** Keep the old repository temporarily as a migration source until its open draft work is reconciled.
