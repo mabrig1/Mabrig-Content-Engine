@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { FilmBlueprint, FilmScenePlan } from '../../../../lib/movie-masterclass';
-import {
 import { currentUser, hasPaidAccess } from '../../../../lib/auth';
+import {
   buildSceneProductionPackage,
   type ActorProfile,
   type SetProfile,
