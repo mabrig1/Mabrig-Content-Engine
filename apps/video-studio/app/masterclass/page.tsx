@@ -1,5 +1,6 @@
 export default function MasterclassHome() {
   const areas = [
+    ['STORYBOARD','Storyboard Studio','Storyboard frames, first/last-frame continuity, automatic QC, local Wan rendering and timeline assembly.','/masterclass/storyboard-studio'],
     ['PRO','Professional Film OS','Shot tables, continuity graph, debate/judge departments, selective reruns, floor plans and NLE exports.','/masterclass/pro-film-lab'],
     ['II','Workstation Playground','Media, identity, production controls, scene timeline, variants, render profiles and cloud projects.','/masterclass/workstation'],
     ['III','Agentic Tutorials','Beginner → Director → Agentic Producer. Lessons open directly inside the workstation.','/masterclass/tutorials'],
