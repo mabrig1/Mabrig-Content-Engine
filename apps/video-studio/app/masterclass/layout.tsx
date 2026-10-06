@@ -8,6 +8,7 @@ export default async function MasterclassLayout({ children }: { children: React.
         <a href="/masterclass"><b>MABRIG <span>CINEMA</span></b></a>
         <nav className="memberNav">
           <a href="/masterclass/pro-film-lab">Pro Film Lab</a>
+          <a href="/masterclass/storyboard-studio">Storyboard Studio</a>
           <a href="/masterclass/workstation">Workstation</a>
           <a href="/masterclass/tutorials">Tutorials</a>
           <a href="/masterclass/library">Prompts & Templates</a>
