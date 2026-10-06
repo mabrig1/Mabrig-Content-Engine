@@ -1,11 +1,17 @@
 import { NextResponse } from 'next/server';
 import type { FilmBlueprint, FilmScenePlan } from '../../../../lib/movie-masterclass';
 import {
+import { currentUser, hasPaidAccess } from '../../../../lib/auth';
   buildSceneProductionPackage,
   type ActorProfile,
   type SetProfile,
 } from '../../../../lib/cinematic-production';
 import { runVideoRoutingMission } from '../../../../lib/video-router/orchestrator';
+
+async function paidGuard() {
+  const user = await currentUser();
+  return Boolean(user && hasPaidAccess(user));
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +21,7 @@ function routerRatio(ratio: string) {
 }
 
 export async function POST(request: Request) {
+  if (!(await paidGuard())) return NextResponse.json({ error: 'Paid membership required.' }, { status: 401 });
   try {
     const body = (await request.json()) as {
       blueprint?: FilmBlueprint;
