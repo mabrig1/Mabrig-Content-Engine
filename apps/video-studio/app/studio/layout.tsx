@@ -4,6 +4,7 @@ export default async function StudioLayout({ children }: { children: React.React
   const user = await requireAdmin();
   return (
     <div className="adminShell">
+      <link rel="stylesheet" href="/owner.css" />
       <header className="memberBar adminBar ownerTopbar">
         <a href="/studio"><b>MABRIG <span>OWNER STUDIO</span></b></a>
         <nav className="memberNav">
