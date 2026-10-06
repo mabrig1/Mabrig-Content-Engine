@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
+import { currentUser, hasPaidAccess } from '../../../lib/auth';
   approveAndContinue,
   createProduction,
   getProduction,
@@ -46,7 +47,13 @@ function routingFromBody(value: unknown): ProductionRouting | undefined {
   };
 }
 
+async function paidGuard() {
+  const user = await currentUser();
+  return Boolean(user && hasPaidAccess(user));
+}
+
 export async function POST(req: NextRequest) {
+  if (!(await paidGuard())) return NextResponse.json({ error: 'Paid membership required.' }, { status: 401 });
   try {
     const body = await req.json();
 
@@ -91,6 +98,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  if (!(await paidGuard())) return NextResponse.json({ error: 'Paid membership required.' }, { status: 401 });
   try {
     const body = await req.json();
     if (!body?.id) {
@@ -115,6 +123,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  if (!(await paidGuard())) return NextResponse.json({ error: 'Paid membership required.' }, { status: 401 });
   const id = req.nextUrl.searchParams.get('id');
   if (!id) {
     return NextResponse.json({ error: 'id is required' }, { status: 400 });
