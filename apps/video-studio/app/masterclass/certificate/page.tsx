@@ -19,7 +19,7 @@ export default async function CertificatePage(){
         <p>completed the MABRIG CINEMA project-based AI filmmaking curriculum.</p>
         <div><b>Verification</b><span>{verification}</span></div>
         <div><b>Modules</b><span>12 / 12</span></div>
-        <button className="secondaryButton fullButton" onClick={undefined as any}>Use your browser Print / Save as PDF</button>
+        <div className="certificatePrint">Use your browser Print / Save as PDF to keep a copy.</div>
       </>:<>
         <h2>{count} / 12 modules completed</h2>
         <a className="generate masterLink" href="/masterclass/tutorials">CONTINUE LEARNING</a>
