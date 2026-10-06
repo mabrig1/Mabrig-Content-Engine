@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import type { FilmBlueprint } from '../../../../lib/movie-masterclass';
 import { buildDeterministicScreenplay } from '../../../../lib/cinematic-production';
 
+import { currentUser, hasPaidAccess } from '../../../../lib/auth';
+async function paidGuard() {
+  const user = await currentUser();
+  return Boolean(user && hasPaidAccess(user));
+}
+
 export const dynamic = 'force-dynamic';
 
 function systemPrompt() {
@@ -51,6 +57,7 @@ async function generateWithOpenRouter(blueprint: FilmBlueprint) {
 }
 
 export async function POST(request: Request) {
+  if (!(await paidGuard())) return NextResponse.json({ error: 'Paid membership required.' }, { status: 401 });
   try {
     const body = (await request.json()) as { blueprint?: FilmBlueprint };
     if (!body.blueprint?.scenes?.length) {
