@@ -16,7 +16,10 @@
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "typescript": "latest"
+    "typescript": "latest",
+    "bcryptjs": "^2.4.3",
+    "mongodb": "^6.20.0",
+    "stripe": "^18.5.0"
   },
   "devDependencies": {}
 }
