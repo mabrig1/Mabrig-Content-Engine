@@ -21,12 +21,12 @@ export default function KaggleBridgePage(){
   }
 
   const starter=useMemo(()=>token?[
-    "import os",
+    "import os, requests",
     "os.environ['MABRIG_STUDIO_URL'] = 'https://aivideo.mabrigkorie.org'",
     "os.environ['MABRIG_KAGGLE_TOKEN'] = '"+token+"'",
-    "",
-    "# Then run the MABRIG worker cell from:",
-    "# GitHub: apps/video-studio/worker/kaggle_mabrig_worker.py",
+    "worker_url = 'https://raw.githubusercontent.com/mabrig1/Mabrig-Content-Engine/unify/aivideo-into-content-engine-20261006/apps/video-studio/worker/kaggle_mabrig_worker.py'",
+    "worker_code = requests.get(worker_url, timeout=60).text",
+    "exec(compile(worker_code, 'kaggle_mabrig_worker.py', 'exec'))",
   ].join("\n"):'', [token]);
 
   async function copy(value:string){
