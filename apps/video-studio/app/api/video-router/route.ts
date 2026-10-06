@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { VIDEO_PROVIDER_REGISTRY, runtimeStatesFromEnvironment } from '../../../lib/video-router/provider-registry';
 import { runVideoRoutingMission } from '../../../lib/video-router/orchestrator';
 import { videoCircuitBreakers } from '../../../lib/video-router/circuit-breaker';
-import type {
 import { currentUser, hasPaidAccess } from '../../../lib/auth';
+import type {
   ProviderRuntimeState,
   VideoGenerationRequest,
 } from '../../../lib/video-router/types';
