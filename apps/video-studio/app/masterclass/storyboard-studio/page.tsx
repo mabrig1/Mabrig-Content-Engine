@@ -12,6 +12,14 @@ type RenderJobState={
   history:string[];
 };
 
+type KaggleJobState={
+  jobId:string;
+  status:string;
+  progress:number;
+  outputUrl?:string|null;
+  error?:string|null;
+};
+
 type AssemblyState={
   assemblyId:string;
   status:string;
@@ -40,6 +48,7 @@ export default function StoryboardStudioPage(){
   const [visionFrames,setVisionFrames]=useState<{firstFrameDataUrl:string;lastFrameDataUrl:string}|null>(null);
   const [timeline,setTimeline]=useState<TimelinePlan|null>(null);
   const [jobs,setJobs]=useState<Record<string,RenderJobState>>({});
+  const [kaggleJobs,setKaggleJobs]=useState<Record<string,KaggleJobState>>({});
   const [assembly,setAssembly]=useState<AssemblyState|null>(null);
   const [autoRepair,setAutoRepair]=useState(true);
   const [busy,setBusy]=useState('');
@@ -184,6 +193,46 @@ export default function StoryboardStudioPage(){
     }catch(e){setNotice(e instanceof Error?e.message:'Status failed')}finally{setBusy('')}
   }
 
+  async function renderKaggle(){
+    if(!selected)return;
+    setBusy('kaggle');setNotice('');
+    try{
+      const r=await fetch('/api/cinema-os/kaggle/queue',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({shot:selected,aspectRatio:input.aspectRatio}),
+      });
+      const p=await r.json();
+      if(!r.ok)throw new Error(p.error||'Kaggle queue failed');
+      setKaggleJobs(v=>({...v,[selected.id]:{
+        jobId:p.jobId,
+        status:p.status,
+        progress:0,
+      }}));
+      setNotice('Shot queued for your Kaggle Wan worker.');
+    }catch(e){setNotice(e instanceof Error?e.message:'Kaggle queue failed')}finally{setBusy('')}
+  }
+
+  async function pollKaggle(){
+    if(!selected)return;
+    const current=kaggleJobs[selected.id];
+    if(!current)return;
+    setBusy('kaggle-status');
+    try{
+      const r=await fetch('/api/cinema-os/kaggle/queue?jobId='+encodeURIComponent(current.jobId),{cache:'no-store'});
+      const p=await r.json();
+      if(!r.ok)throw new Error(p.error||'Kaggle status failed');
+      setKaggleJobs(v=>({...v,[selected.id]:{
+        jobId:current.jobId,
+        status:p.job.status,
+        progress:p.job.progress||0,
+        outputUrl:p.job.outputUrl,
+        error:p.job.error,
+      }}));
+      setNotice('Kaggle render status: '+p.job.status+' · '+(p.job.progress||0)+'%');
+    }catch(e){setNotice(e instanceof Error?e.message:'Kaggle status failed')}finally{setBusy('')}
+  }
+
   async function runVisualQc(){
     if(!selected||!film||!selectedBoard)return;
     const job=jobs[selected.id];
@@ -298,11 +347,14 @@ export default function StoryboardStudioPage(){
           <div className="scenePackage"><small>FIRST FRAME</small><p>{selected.firstFrameSource}</p><small>LAST FRAME HANDOFF</small><p>{selected.lastFrameHandoff}</p><small>GENERATION PROMPT</small><p>{selected.generationPrompt}</p></div>
           <div className="shotButtons">
             <button className="secondaryButton" onClick={runRuleQc} disabled={busy==='qc'}>{busy==='qc'?'Scoring…':'RULE QC'}</button>
+            <button className="secondaryButton" onClick={renderKaggle} disabled={busy==='kaggle'}>{busy==='kaggle'?'Queueing Kaggle…':'GENERATE ON KAGGLE GPU'}</button>
+            {kaggleJobs[selected.id]&&<button className="secondaryButton" onClick={pollKaggle} disabled={busy==='kaggle-status'}>CHECK KAGGLE STATUS</button>}
             <button className="secondaryButton" onClick={renderLocal} disabled={busy==='render'}>{busy==='render'?'Submitting…':'GENERATE LOCAL WAN'}</button>
             {jobs[selected.id]&&<button className="secondaryButton" onClick={poll} disabled={busy==='poll'}>CHECK STATUS</button>}
             {jobs[selected.id]?.status==='succeeded'&&<button className="secondaryButton visionButton" onClick={runVisualQc} disabled={busy==='vision'}>{busy==='vision'?'Inspecting frames…':'VISION QC'}</button>}
           </div>
-          {jobs[selected.id]&&<div className="departmentStatus"><b>{jobs[selected.id].status.toUpperCase()}</b><span>{jobs[selected.id].jobId}</span><span>{jobs[selected.id].history.length?jobs[selected.id].history.length+' prior take(s) preserved':'first take'}</span>{jobs[selected.id].status==='succeeded'&&<a href={'/api/cinema-os/media?kind=shot&id='+encodeURIComponent(jobs[selected.id].jobId)} target="_blank" rel="noreferrer">PLAY CURRENT TAKE</a>}</div>}
+          {kaggleJobs[selected.id]&&<div className="departmentStatus kaggleStatus"><b>KAGGLE · {kaggleJobs[selected.id].status.toUpperCase()} · {kaggleJobs[selected.id].progress}%</b><span>{kaggleJobs[selected.id].jobId}</span>{kaggleJobs[selected.id].error&&<span>{kaggleJobs[selected.id].error}</span>}{kaggleJobs[selected.id].status==='succeeded'&&<><video controls src={kaggleJobs[selected.id].outputUrl||''}/><a href={kaggleJobs[selected.id].outputUrl||'#'} target="_blank" rel="noreferrer">OPEN KAGGLE TAKE</a></>}</div>}
+          {jobs[selected.id]&&<div className="departmentStatus"><b>LOCAL WAN · {jobs[selected.id].status.toUpperCase()}</b><span>{jobs[selected.id].jobId}</span><span>{jobs[selected.id].history.length?jobs[selected.id].history.length+' prior take(s) preserved':'first take'}</span>{jobs[selected.id].status==='succeeded'&&<a href={'/api/cinema-os/media?kind=shot&id='+encodeURIComponent(jobs[selected.id].jobId)} target="_blank" rel="noreferrer">PLAY CURRENT TAKE</a>}</div>}
         </div>
 
         <div className="panel"><h2>AUTOMATIC QC / RESHOOT</h2>
