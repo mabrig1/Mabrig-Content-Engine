@@ -1,5 +1,7 @@
+import { ObjectId } from 'mongodb';
 import { NextResponse } from 'next/server';
 import { currentUser, hasPaidAccess } from '../../../../lib/auth';
+import { genericCollection } from '../../../../lib/db';
 import type { ProfessionalShot } from '../../../../lib/pro-film-os';
 import { deterministicQC, type QCScore } from '../../../../lib/storyboard-engine';
 
@@ -53,6 +55,7 @@ export async function POST(request:Request){
       jobId?:string;
       approvedStoryboardDataUrl?:string;
       previousShot?:ProfessionalShot|null;
+      actorReferenceDataUrls?:string[];
     };
     if(!body.shot?.id||!body.jobId) return NextResponse.json({error:'shot and jobId are required.'},{status:400});
 
@@ -78,6 +81,9 @@ export async function POST(request:Request){
     const key=process.env.OPENROUTER_API_KEY?.trim();
     const model=(process.env.OPENROUTER_VISION_MODEL||process.env.OPENROUTER_MODEL)?.trim();
     const approved=String(body.approvedStoryboardDataUrl||'');
+    const actorRefs=(body.actorReferenceDataUrls||[])
+      .filter((item)=>typeof item==='string'&&item.startsWith('data:image/')&&item.length<2_500_000)
+      .slice(0,3);
 
     if(!key||!model||!approved.startsWith('data:image/')){
       return NextResponse.json({
@@ -105,6 +111,12 @@ export async function POST(request:Request){
           role:'user',
           content:[
             {type:'text',text:`You are a senior visual continuity supervisor. Compare the approved storyboard image with the generated FIRST and LAST frames for this shot. Score 0-10 for identity, continuity, anatomyPhysics, performance, lighting, editFitness. Return JSON only with those six fields, decision PASS/REPAIR/RESHOOT, issues array, repairPrompt. Preserve story intent and do not invent traits not visible or specified. Shot plan: ${JSON.stringify(body.shot)}`},
+            ...(actorRefs.length
+              ? [
+                  {type:'text',text:'APPROVED ACTOR IDENTITY REFERENCES'},
+                  ...actorRefs.map((url)=>({type:'image_url',image_url:{url}})),
+                ]
+              : []),
             {type:'text',text:'APPROVED STORYBOARD'},
             {type:'image_url',image_url:{url:approved}},
             {type:'text',text:'GENERATED FIRST FRAME'},
@@ -124,11 +136,24 @@ export async function POST(request:Request){
     const raw=payload?.choices?.[0]?.message?.content;
     let parsed:any={};
     try{parsed=typeof raw==='string'?JSON.parse(raw):{};}catch{}
+    const finalQc=normalizeVision(parsed,base);
+    try{
+      const reviews=await genericCollection('qc_reviews');
+      await reviews.insertOne({
+        userId:new ObjectId(user.id),
+        shotId:body.shot.id,
+        jobId:body.jobId,
+        source:'openrouter-vision',
+        actorReferenceCount:actorRefs.length,
+        qc:finalQc,
+        createdAt:new Date(),
+      });
+    }catch{}
     return NextResponse.json({
       ok:true,
       source:'openrouter-vision',
       frames:{firstFrameDataUrl:first,lastFrameDataUrl:last},
-      qc:normalizeVision(parsed,base),
+      qc:finalQc,
     });
   }catch(error){
     return NextResponse.json({error:error instanceof Error?error.message:'Visual QC failed.'},{status:502});
