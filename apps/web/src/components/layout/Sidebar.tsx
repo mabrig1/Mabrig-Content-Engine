@@ -15,6 +15,7 @@ import {
   Settings,
   ChevronRight,
   Sparkles,
+  Clapperboard,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -24,6 +25,7 @@ interface SidebarProps {
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', exact: true },
+  { href: '/dashboard/studio', icon: Clapperboard, label: 'AI Content Studio' },
   { href: '/dashboard/compose', icon: PenSquare, label: 'Compose' },
   { href: '/dashboard/calendar', icon: Calendar, label: 'Calendar' },
   { href: '/dashboard/media', icon: Image, label: 'Media Library' },
