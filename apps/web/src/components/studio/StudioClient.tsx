@@ -186,7 +186,7 @@ export default function StudioClient() {
           </div>
 
           <div className="card p-5 space-y-3">
-            <h2 className="font-semibold text-white flex items-center gap-2"><Film className="w-4 h-4" />3. Video director's brief</h2>
+            <h2 className="font-semibold text-white flex items-center gap-2"><Film className="w-4 h-4" />3. Video director&apos;s brief</h2>
             <pre className="whitespace-pre-wrap font-sans text-sm text-gray-300 leading-relaxed">{kit.script}</pre>
             <button type="button" className="btn-secondary text-xs" onClick={() => copy(kit.script)}><Copy className="w-4 h-4" /> Copy voiceover script</button>
             <pre className="whitespace-pre-wrap font-sans text-sm text-gray-400 leading-relaxed border-t border-white/10 pt-4">{kit.productionBrief}</pre>
