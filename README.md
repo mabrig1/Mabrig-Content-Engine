@@ -2,7 +2,44 @@
 
 > AI-powered Social Media CRM & Content Automation Platform
 
-A production-ready platform for creators and agencies to schedule content, manage audiences, generate AI captions, and scale their social media presence.
+A developing platform for creators and agencies to schedule content, manage audiences, generate AI captions, and scale their social media presence.
+
+---
+
+
+## Creator Operations upgrade (November 2026)
+
+Campaign Studio is now available at /dashboard/campaigns. A creator can enter a campaign name, topic,
+audience, evidence-based key message and desired action, then:
+1. Prepare platform-specific draft starting points for nine channels without an AI key.
+2. Edit each draft, or optionally refine it through the existing AI generation endpoint.
+3. Save multiple drafts atomically to the authenticated workspace.
+4. View planned content at /dashboard/calendar and reschedule or move posts back to drafts.
+
+**Honest status boundaries:**
+- The new planner creates editable content; it does not guarantee virality or publish externally.
+- Scheduled records are editorial plans, NOT confirmation of delivery. Automatic publisher workers and verified OAuth are not yet implemented.
+- The old manual social-account POST endpoint accepted arbitrary placeholder tokens. It now rejects unverified linking.
+  Previously stored manual accounts require a separate review before publishing is ever enabled.
+- Post creation validates all referenced social/media/tag IDs against the current workspace;
+  social access tokens are excluded from post API responses.
+- NEXTAUTH_SECRET is required at runtime and must have at least 32 characters.
+- CI now checks feature branches, enforces TypeScript and lint results, and checks PRs against the
+  repository's unusual default branch. There is no tracked pnpm lockfile yet; CI currently uses
+  the non-frozen install mode. Generate and commit a reviewed lockfile before production release.
+
+### Expanded product roadmap
+
+| Phase | Area | Release gate |
+| --- | --- | --- |
+| Now | Campaign briefs, multi-format repurposing, drafts, calendar | Workspace review |
+| Next | Saved brand voices, campaigns, content approval, original video/image handoff | Rights and moderation |
+| Next | Verified social OAuth, publishing adapters, durable queues | API access, scoped tokens, retries |
+| Later | Verified performance metrics, audience segments, experiments | Consent and attribution |
+| Later | Agency clients, billing, approval hierarchy and audit history | Access controls and payment validation |
+
+The existing draft PRs for Hugging Face (#1) and video-studio consolidation (#2)
+have not been merged or replaced as part of this change.
 
 ---
 

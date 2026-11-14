@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop, 'claude/**', 'feature/**']
+    branches: [main, develop, 'claude/**', 'feature/**', 'feat/**']
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, 'claude/**']
 
 env:
   NODE_VERSION: '20'
@@ -28,7 +28,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Generate Prisma client
         run: npx prisma generate --schema=packages/database/prisma/schema.prisma
@@ -37,11 +37,9 @@ jobs:
 
       - name: TypeScript check
         run: pnpm --filter @mabrig/web exec tsc --noEmit
-        continue-on-error: true
 
       - name: ESLint
         run: pnpm --filter @mabrig/web lint
-        continue-on-error: true
 
   # ─── Build ────────────────────────────────────────────────────────────────
   build:
@@ -68,7 +66,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Generate Prisma client
         run: npx prisma generate --schema=packages/database/prisma/schema.prisma
