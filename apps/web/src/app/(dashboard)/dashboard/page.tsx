@@ -45,9 +45,9 @@ export default async function DashboardPage() {
       }),
     ]);
 
-    const scheduled = postCounts.find((p) => p.status === 'SCHEDULED')?._count ?? 0;
-    const published = postCounts.find((p) => p.status === 'PUBLISHED')?._count ?? 0;
-    const total = postCounts.reduce((acc, p) => acc + p._count, 0);
+    const scheduled = postCounts.find((p: { status: string; _count: number }) => p.status === 'SCHEDULED')?._count ?? 0;
+    const published = postCounts.find((p: { status: string; _count: number }) => p.status === 'PUBLISHED')?._count ?? 0;
+    const total = postCounts.reduce((acc: number, p: { _count: number }) => acc + p._count, 0);
 
     stats = {
       totalPosts: total,

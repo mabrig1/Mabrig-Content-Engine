@@ -95,7 +95,7 @@ export default function ComposePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content, title,
-          scheduledAt: scheduledAt || null,
+          scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null,
           socialAccountIds: selectedAccounts,
           status,
           isEvergreen,
@@ -104,7 +104,7 @@ export default function ComposePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(status === 'DRAFT' ? 'Draft saved!' : 'Post scheduled!');
+        toast.success(status === 'DRAFT' ? 'Draft saved!' : 'Added to content calendar (not published)');
         setContent(''); setTitle(''); setScheduledAt(''); setSelectedAccounts([]);
       } else {
         toast.error(data.error || 'Failed to save');
@@ -165,13 +165,13 @@ export default function ComposePage() {
                   onChange={(e) => setIsEvergreen(e.target.checked)}
                   className="w-3 h-3 rounded border-white/20 bg-surface-200 text-brand-500 focus:ring-brand-500"
                 />
-                Evergreen (auto-recycle)
+                Evergreen (manual reuse)
               </label>
             </div>
           </div>
 
           <div className="card p-4">
-            <h3 className="text-sm font-medium text-gray-300 mb-3">Post to accounts</h3>
+            <h3 className="text-sm font-medium text-gray-300 mb-3">Plan for accounts (publishing requires verified OAuth)</h3>
             {accounts.length === 0 ? (
               <div className="text-center py-4">
                 <p className="text-sm text-gray-500">No social accounts connected.</p>
@@ -210,7 +210,7 @@ export default function ComposePage() {
               className="input"
               value={scheduledAt}
               onChange={(e) => setScheduledAt(e.target.value)}
-              min={new Date().toISOString().slice(0, 16)}
+              min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
             />
           </div>
 
@@ -224,14 +224,9 @@ export default function ComposePage() {
               {saving ? 'Saving...' : 'Schedule Post'}
             </button>
             {selectedAccounts.length > 0 && !scheduledAt && (
-              <button
-                disabled={saving}
-                onClick={() => { toast.success('Publishing... (connect real OAuth to enable)'); }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors disabled:opacity-50"
-              >
-                <Send className="w-4 h-4" />
-                Publish Now
-              </button>
+              <p className="text-xs text-amber-300 max-w-sm">
+                Live publishing is not connected. Save a draft for review; no content will be sent to social networks.
+              </p>
             )}
           </div>
         </div>

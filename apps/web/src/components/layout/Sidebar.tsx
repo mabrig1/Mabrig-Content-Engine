@@ -7,6 +7,7 @@ import type { User, Workspace } from '@/types';
 import {
   LayoutDashboard,
   PenSquare,
+  Clapperboard,
   Calendar,
   Image,
   BarChart3,
@@ -25,6 +26,7 @@ interface SidebarProps {
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', exact: true },
   { href: '/dashboard/compose', icon: PenSquare, label: 'Compose' },
+  { href: '/dashboard/campaigns', icon: Clapperboard, label: 'Campaign Studio' },
   { href: '/dashboard/calendar', icon: Calendar, label: 'Calendar' },
   { href: '/dashboard/media', icon: Image, label: 'Media Library' },
   { href: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
