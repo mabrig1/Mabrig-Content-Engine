@@ -21,7 +21,7 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export function signToken(payload: { userId: string; email: string; workspaceId?: string }): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '30d' });
 }
 
 export function verifyToken(token: string): { userId: string; email: string; workspaceId?: string } | null {
