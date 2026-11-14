@@ -26,13 +26,13 @@ export async function GET() {
     }),
   ]);
 
-  const statusMap = postStats.reduce((acc: Record<string, number>, g) => {
+  const statusMap: Record<string, number> = postStats.reduce((acc: Record<string, number>, g: { status: string; _count: number }) => {
     acc[g.status] = g._count;
     return acc;
   }, {});
 
-  const totalImpressions = recentPosts.reduce((acc, p) => acc + (p.analytics?.impressions || 0), 0);
-  const totalEngagements = recentPosts.reduce((acc, p) => acc + (p.analytics?.likes || 0) + (p.analytics?.comments || 0), 0);
+  const totalImpressions = recentPosts.reduce((acc: number, p: { analytics: { impressions: number } | null }) => acc + (p.analytics?.impressions || 0), 0);
+  const totalEngagements = recentPosts.reduce((acc: number, p: { analytics: { likes: number; comments: number } | null }) => acc + (p.analytics?.likes || 0) + (p.analytics?.comments || 0), 0);
   const engagementRate = totalImpressions > 0 ? (totalEngagements / totalImpressions) * 100 : 0;
 
   return NextResponse.json({
