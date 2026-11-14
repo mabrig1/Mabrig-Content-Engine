@@ -2,12 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [main, develop, 'claude/**', 'feature/**', 'feat/**']
+    branches: [main, develop, 'claude/**', 'feature/**', 'feat/**', 'fix/**']
   pull_request:
-    branches: [main, develop, 'claude/**']
+    branches: [main, develop, 'claude/**', 'feat/**']
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
 
 jobs:
   # ─── Type Check & Lint ────────────────────────────────────────────────────
@@ -96,3 +96,25 @@ jobs:
           tags: ghcr.io/mabrig1/mabrig-content-engine:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  cloudflare-package:
+    name: Cloudflare Worker adapter dry-run
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      DATABASE_URL: postgresql://mabrig:password@localhost:5432/mabrig_content_engine
+      NEXTAUTH_SECRET: ci-test-secret-minimum-32-characters-long
+      NEXTAUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Generate Prisma client
+        run: pnpm --filter @mabrig/web db:generate
+      - name: Build Cloudflare adapter and bundle without deploying
+        run: pnpm --filter @mabrig/web cf:dry-run
