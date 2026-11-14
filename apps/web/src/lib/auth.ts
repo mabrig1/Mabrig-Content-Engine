@@ -3,7 +3,13 @@ import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import { prisma } from './prisma';
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'mabrig-secret-change-in-production';
+function getJwtSecret(): string {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error('NEXTAUTH_SECRET must be configured with at least 32 characters');
+  }
+  return secret;
+}
 const COOKIE_NAME = 'mabrig_session';
 
 export async function hashPassword(password: string): Promise<string> {
@@ -20,7 +26,7 @@ export function signToken(payload: { userId: string; email: string; workspaceId?
 
 export function verifyToken(token: string): { userId: string; email: string; workspaceId?: string } | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as { userId: string; email: string; workspaceId?: string };
+    return jwt.verify(token, getJwtSecret()) as { userId: string; email: string; workspaceId?: string };
   } catch {
     return null;
   }
