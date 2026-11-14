@@ -66,8 +66,8 @@ export async function getSession() {
   }
 }
 
-export function setSessionCookie(token: string) {
-  const cookieStore = cookies();
+export async function setSessionCookie(token: string) {
+  const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -77,8 +77,8 @@ export function setSessionCookie(token: string) {
   });
 }
 
-export function clearSessionCookie() {
-  const cookieStore = cookies();
+export async function clearSessionCookie() {
+  const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
 }
 

@@ -44,3 +44,8 @@ apps/web/public/uploads/
 
 # Misc
 *.tsbuildinfo
+
+# Cloudflare OpenNext build and dry-run outputs
+.open-next/
+.cloudflare-dry-run/
+.dev.vars*

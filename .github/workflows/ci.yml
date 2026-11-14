@@ -2,12 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [main, develop, 'claude/**', 'feature/**', 'feat/**']
+    branches: [main, develop, 'claude/**', 'feature/**', 'feat/**', 'fix/**']
   pull_request:
-    branches: [main, develop, 'claude/**']
+    branches: [main, develop, 'claude/**', 'feat/**']
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
 
 jobs:
   # ─── Type Check & Lint ────────────────────────────────────────────────────
@@ -96,3 +96,74 @@ jobs:
           tags: ghcr.io/mabrig1/mabrig-content-engine:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  cloudflare-package:
+    name: Cloudflare Worker adapter dry-run
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      DATABASE_URL: postgresql://mabrig:password@localhost:5432/mabrig_content_engine
+      NEXTAUTH_SECRET: ci-test-secret-minimum-32-characters-long
+      NEXTAUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Generate Prisma client
+        run: pnpm --filter @mabrig/web db:generate
+      - name: Build Cloudflare adapter and bundle without deploying
+        run: pnpm --filter @mabrig/web cf:dry-run
+      - name: Smoke test Worker homepage and login locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd apps/web
+          pnpm exec wrangler dev --local --port 8787 > /tmp/mabrig-worker.log 2>&1 &
+          worker_pid=$!
+          trap 'kill "$worker_pid" 2>/dev/null || true; tail -100 /tmp/mabrig-worker.log || true' EXIT
+          ready=0
+          for attempt in $(seq 1 45); do
+            if curl -fsS --max-time 5 http://127.0.0.1:8787/ -o /tmp/mabrig-home.html; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ready" != 1 ]; then
+            echo "Worker failed to serve the homepage"
+            exit 1
+          fi
+          curl -fsS --max-time 20 http://127.0.0.1:8787/login -o /tmp/mabrig-login.html
+          grep -qi 'login' /tmp/mabrig-login.html
+          echo "Worker homepage and login smoke tests passed"
+
+
+  cloudflare-default-flow:
+    name: Cloudflare dashboard command parity (no deploy)
+    runs-on: ubuntu-latest
+    needs: quality
+    env:
+      DATABASE_URL: postgresql://mabrig:password@localhost:5432/mabrig_content_engine
+      NEXTAUTH_SECRET: ci-test-secret-minimum-32-characters-long
+      NEXTAUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.15
+      - name: Reproduce Cloudflare installer
+        run: bun install
+      - name: Reproduce existing Cloudflare build command
+        run: npm run build
+      - name: Verify root worker config and adapter bundle without deployment
+        run: pnpm exec wrangler deploy --dry-run --outdir=.cloudflare-dry-run

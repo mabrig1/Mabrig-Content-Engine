@@ -8,14 +8,19 @@
     "start": "next start",
     "lint": "next lint",
     "db:generate": "prisma generate --schema=../../packages/database/prisma/schema.prisma",
-    "db:migrate": "prisma migrate dev --schema=../../packages/database/prisma/schema.prisma"
+    "db:migrate": "prisma migrate dev --schema=../../packages/database/prisma/schema.prisma",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare deploy",
+    "cf:upload": "opennextjs-cloudflare upload",
+    "cf:dry-run": "opennextjs-cloudflare build && wrangler deploy --dry-run --outdir=../../.cloudflare-dry-run"
   },
   "dependencies": {
-    "next": "14.2.5",
+    "next": "15.5.29",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "next-auth": "^4.24.7",
-    "@prisma/client": "^5.16.0",
+    "@prisma/client": "6.19.0",
     "tailwindcss": "^3.4.4",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.39",
@@ -58,7 +63,9 @@
     "ioredis": "^5.4.1",
     "nodemailer": "^6.9.14",
     "uuid": "^10.0.0",
-    "dayjs": "^1.11.12"
+    "dayjs": "^1.11.12",
+    "@prisma/adapter-pg": "6.19.0",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",
@@ -71,11 +78,14 @@
     "@types/multer": "^1.4.11",
     "typescript": "^5.5.3",
     "eslint": "^8.57.0",
-    "eslint-config-next": "14.2.5",
-    "prisma": "^5.16.0",
+    "eslint-config-next": "15.5.29",
+    "prisma": "6.19.0",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.5",
     "@typescript-eslint/eslint-plugin": "^8.40.0",
-    "@typescript-eslint/parser": "^8.40.0"
+    "@typescript-eslint/parser": "^8.40.0",
+    "@types/pg": "^8.15.4",
+    "wrangler": "^4.47.0",
+    "@opennextjs/cloudflare": "1.20.17"
   }
 }
