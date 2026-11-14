@@ -6,7 +6,7 @@ The 2026-11-14 Cloudflare log says the installer ran `bun install`, then `next: 
 This is a pnpm workspace; Bun only installed the root package without the web workspace.
 A missing tracked `pnpm-lock.yaml` made package-manager detection unreliable.
 
-## Cloudflare Workers Builds — configuration required
+## Cloudflare Workers Builds — recommended configuration
 
 In Cloudflare dashboard > Workers & Pages > mabrig-content-engine > Settings > Builds:
 
@@ -50,3 +50,15 @@ Run migrations through your database migration workflow, never automatically in 
 
 The previously implemented Campaign Studio is in PR #3; this branch is based on that code
 and is not merged into the repository default branch.
+
+## Backward-compatible recovery for existing Cloudflare Build command
+
+The root package `npm run build` now uses a `prebuild` hook to install the pnpm
+workspace and generate Prisma, then packages the Next.js app with OpenNext.
+A root `wrangler.jsonc` points to the resulting Worker bundle. That supports
+Cloudflare's existing `bun install` -> `npm run build` -> `npx wrangler deploy`
+sequence and is covered by an independent CI parity check (no production deploy).
+
+Explicit pnpm and `SKIP_DEPENDENCY_INSTALL=1` remain the preferred deployment
+settings for predictable builds. Do not use both a root and app-specific
+`wrangler deploy` in the same automatic pipeline.

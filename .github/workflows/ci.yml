@@ -142,3 +142,28 @@ jobs:
           grep -qi 'login' /tmp/mabrig-login.html
           echo "Worker homepage and login smoke tests passed"
 
+
+  cloudflare-default-flow:
+    name: Cloudflare dashboard command parity (no deploy)
+    runs-on: ubuntu-latest
+    needs: quality
+    env:
+      DATABASE_URL: postgresql://mabrig:password@localhost:5432/mabrig_content_engine
+      NEXTAUTH_SECRET: ci-test-secret-minimum-32-characters-long
+      NEXTAUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.15
+      - name: Reproduce Cloudflare installer
+        run: bun install
+      - name: Reproduce existing Cloudflare build command
+        run: npm run build
+      - name: Verify root worker config and adapter bundle without deployment
+        run: pnpm exec wrangler deploy --dry-run --outdir=.cloudflare-dry-run

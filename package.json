@@ -4,21 +4,24 @@
   "private": true,
   "scripts": {
     "dev": "turbo run dev",
-    "build": "turbo run build",
+    "build": "pnpm --filter @mabrig/web cf:build",
     "start": "turbo run start",
     "lint": "turbo run lint",
     "db:generate": "turbo run db:generate",
     "db:migrate": "turbo run db:migrate",
     "db:studio": "cd packages/database && npx prisma studio",
     "cf:build": "pnpm --filter @mabrig/web cf:build",
-    "cf:dry-run": "pnpm --filter @mabrig/web cf:dry-run"
+    "cf:dry-run": "pnpm --filter @mabrig/web cf:dry-run",
+    "build:node": "turbo run build",
+    "prebuild": "pnpm install --no-frozen-lockfile && pnpm --filter @mabrig/web db:generate"
   },
   "devDependencies": {
     "turbo": "^2.0.0",
     "typescript": "^5.3.0",
     "@types/node": "^20.0.0",
     "prettier": "^3.2.0",
-    "eslint": "^8.57.0"
+    "eslint": "^8.57.0",
+    "wrangler": "^4.47.0"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {
