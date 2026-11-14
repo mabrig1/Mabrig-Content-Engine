@@ -11,12 +11,12 @@ const updateSchema = z.object({
   isEvergreen: z.boolean().optional(),
 }).strict();
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
   if (!session?.workspace) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
   const post = await prisma.post.findFirst({
-    where: { id: params.id, workspaceId: session.workspace.id },
+    where: { id: (await params).id, workspaceId: session.workspace.id },
     include: {
       socialAccounts: { include: { socialAccount: {
         select: { id: true, platform: true, accountName: true, username: true, avatar: true, isActive: true },
@@ -30,7 +30,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   return NextResponse.json({ success: true, data: post });
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
   if (!session?.workspace) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const parsed = updateSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ success: false, error: 'Invalid input' }, { status: 400 });
 
-    const existing = await prisma.post.findFirst({ where: { id: params.id, workspaceId: session.workspace.id } });
+    const existing = await prisma.post.findFirst({ where: { id: (await params).id, workspaceId: session.workspace.id } });
     if (!existing) return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
     if (existing.status === 'PUBLISHED' || existing.status === 'PUBLISHING') {
       return NextResponse.json({ success: false, error: 'Published or publishing posts cannot be changed here' }, { status: 409 });
@@ -61,7 +61,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     const updatedCount = await prisma.post.updateMany({
-      where: { id: params.id, workspaceId: session.workspace.id, status: { notIn: ['PUBLISHED', 'PUBLISHING'] } },
+      where: { id: (await params).id, workspaceId: session.workspace.id, status: { notIn: ['PUBLISHED', 'PUBLISHING'] } },
       data: {
         ...(changes.content !== undefined && { content: changes.content }),
         ...(changes.title !== undefined && { title: changes.title }),
@@ -71,7 +71,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       },
     });
     if (updatedCount.count === 0) return NextResponse.json({ success: false, error: 'Post changed; retry' }, { status: 409 });
-    const updated = await prisma.post.findFirst({ where: { id: params.id, workspaceId: session.workspace.id } });
+    const updated = await prisma.post.findFirst({ where: { id: (await params).id, workspaceId: session.workspace.id } });
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     console.error('Post update failed:', error);
@@ -79,12 +79,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
   if (!session?.workspace) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
   const deleted = await prisma.post.deleteMany({
-    where: { id: params.id, workspaceId: session.workspace.id, status: { notIn: ['PUBLISHED', 'PUBLISHING'] } },
+    where: { id: (await params).id, workspaceId: session.workspace.id, status: { notIn: ['PUBLISHED', 'PUBLISHING'] } },
   });
   if (deleted.count === 0) return NextResponse.json({ success: false, error: 'Not found or cannot delete published post' }, { status: 404 });
   return NextResponse.json({ success: true });
