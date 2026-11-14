@@ -9,7 +9,9 @@
     "lint": "turbo run lint",
     "db:generate": "turbo run db:generate",
     "db:migrate": "turbo run db:migrate",
-    "db:studio": "cd packages/database && npx prisma studio"
+    "db:studio": "cd packages/database && npx prisma studio",
+    "cf:build": "pnpm --filter @mabrig/web cf:build",
+    "cf:dry-run": "pnpm --filter @mabrig/web cf:dry-run"
   },
   "devDependencies": {
     "turbo": "^2.0.0",
